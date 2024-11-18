@@ -9,20 +9,20 @@ $endDate = new DateTime($data['endDate']);
 $currentDate = new DateTime('now');
 $currentDate->setTime(0, 0, 0); // Ensure midnight
 
-// Calculate remaining days
-$interval = $endDate->diff($currentDate);
-$daysRemaining = max(0, $interval->days + 1); // Include today
+// Calculate the total duration of the tracking period (include both start and end date)
+$trackingDuration = $startDate->diff($endDate)->days + 1; // Include both start and end date
 
-// Calculate elapsed days (including today)
-$elapsedDays = max(1, (int)$currentDate->diff($startDate)->format('%a') + 1);
+// Calculate remaining days by subtracting the elapsed days from total tracking duration
+$elapsedDays = max(0, $currentDate->diff($startDate)->days); // Days passed since the start date
+$daysRemaining = max(0, $trackingDuration - $elapsedDays); // Remaining days
 
-// Count total completions
+// Count total completions for each habit
 $totalChecks = 0;
 $habitStats = array_fill_keys($data['columns'], 0); // Initialize habit stats
 
 foreach ($data['days'] as $date => $habits) {
     $habitDate = new DateTime($date);
-    if ($habitDate >= $startDate && $habitDate <= $currentDate) { // Only include dates on or after startDate
+    if ($habitDate >= $startDate && $habitDate <= $endDate) { // Only include valid tracking period
         foreach ($habits as $habit => $completed) {
             if ($completed) {
                 $habitStats[$habit]++;
@@ -32,8 +32,10 @@ foreach ($data['days'] as $date => $habits) {
     }
 }
 
+// Calculate total possible completions: total days * number of habits (columns)
+$totalPossible = $trackingDuration * count($data['columns']); // For all habits and days
+
 // Calculate total progress percentage
-$totalPossible = $elapsedDays * count($data['columns']); // Total possible checks for elapsed days
 $progressPercent = $totalPossible > 0 ? round(($totalChecks / $totalPossible) * 100) : 0;
 
 // Day names array
@@ -41,7 +43,6 @@ $dayNames = [
     1 => 'LUN', 2 => 'MAR', 3 => 'MER', 
     4 => 'GIO', 5 => 'VEN', 6 => 'SAB', 0 => 'DOM'
 ];
-
 ?>
 <!DOCTYPE html>
 <html>
@@ -89,14 +90,14 @@ $dayNames = [
                                 <?= htmlspecialchars($habit) ?>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                <?= $habitStats[$habit] ?>/<?= $elapsedDays ?>
+                                <?= $habitStats[$habit] ?>/<?= $trackingDuration ?>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                 <div class="flex items-center justify-center">
                                     <div class="w-full bg-gray-200 rounded-full h-2.5 max-w-[200px] mr-2">
-                                        <div class="bg-blue-600 h-2.5 rounded-full" style="width: <?= $elapsedDays > 0 ? round(($habitStats[$habit] / $elapsedDays) * 100) : 0 ?>%"></div>
+                                        <div class="bg-blue-600 h-2.5 rounded-full" style="width: <?= $trackingDuration > 0 ? round(($habitStats[$habit] / $trackingDuration) * 100) : 0 ?>%"></div>
                                     </div>
-                                    <?= $elapsedDays > 0 ? round(($habitStats[$habit] / $elapsedDays) * 100) : 0 ?>%
+                                    <?= $trackingDuration > 0 ? round(($habitStats[$habit] / $trackingDuration) * 100) : 0 ?>%
                                 </div>
                             </td>
                         </tr>

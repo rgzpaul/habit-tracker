@@ -2,7 +2,7 @@
 // Initial Setup
 $startDate = new DateTime('2024-11-17');
 $startDate->setTime(0, 0, 0); // Reset to midnight
-$numberOfDays = 50;
+$numberOfDays = 99;
 
 $currentDate = new DateTime('now');
 $currentDate->setTime(0, 0, 0); // Reset to midnight
@@ -19,8 +19,14 @@ file_put_contents('data.json', json_encode($data, JSON_PRETTY_PRINT));
 $interval = $endDate->diff($currentDate);
 $daysRemaining = max(0, $interval->days + 1); // Include today
 
-// Progress percentage
-$progressPercent = min(100, round((($numberOfDays - $daysRemaining) / $numberOfDays) * 100));
+// Adjust remaining days and progress if the end date has passed
+if ($currentDate > $endDate) {
+    $daysRemaining = 0;
+    $progressPercent = 100; // Set progress to 100% if the end date is past
+} else {
+    // Calculate progress if the end date has not passed
+    $progressPercent = min(100, round((($numberOfDays - $daysRemaining) / $numberOfDays) * 100));
+}
 
 $dayNames = [
     1 => 'LUN', 2 => 'MAR', 3 => 'MER', 
