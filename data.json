@@ -1,0 +1,26 @@
+{
+    "columns": [
+        "Colazione",
+        "Pranzo",
+        "Cena",
+        "Allenamento",
+        "Vitamine",
+        "Creatina",
+        "3L Acqua"
+    ],
+    "days": {
+        "2024-11-17": {
+            "Colazione": true,
+            "Pranzo": true,
+            "Allenamento": true,
+            "Cena": true
+        },
+        "2024-11-18": {
+            "Pranzo": true,
+            "Creatina": true,
+            "Vitamine": true
+        }
+    },
+    "startDate": "2024-11-17",
+    "endDate": "2025-01-05"
+}
