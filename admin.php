@@ -107,7 +107,7 @@ $trackingDays = $startDate->diff($endDate)->days + 1;
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Habit Tracker</title>
+    <title>Admin Panel - <?= $trackingDays ?> Days Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap" rel="stylesheet">
 </head>
@@ -115,7 +115,7 @@ $trackingDays = $startDate->diff($endDate)->days + 1;
     <div class="max-w-4xl w-full">
         <!-- Header -->
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Admin Panel</h1>
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800"><?= $trackingDays ?> Days Tracker - Admin</h1>
             <div class="flex gap-2">
                 <a href="index.php" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm">Tracker</a>
                 <a href="report.php" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm">Report</a>
