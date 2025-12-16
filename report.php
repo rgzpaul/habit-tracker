@@ -17,13 +17,19 @@ function loadData(): array {
 
 function calculateReportStats(array $data): array {
     $startDate = new DateTime($data['startDate']);
+    $startDate->setTime(0, 0, 0);
     $endDate = new DateTime($data['endDate']);
+    $endDate->setTime(0, 0, 0);
     $currentDate = new DateTime('now');
     $currentDate->setTime(0, 0, 0);
 
     $trackingDays = $startDate->diff($endDate)->days + 1;
-    $elapsedDays = max(0, $currentDate->diff($startDate)->days);
-    $daysRemaining = max(0, $trackingDays - $elapsedDays);
+
+    if ($currentDate > $endDate) {
+        $daysRemaining = 0;
+    } else {
+        $daysRemaining = max(0, $endDate->diff($currentDate)->days + 1);
+    }
 
     // Initialize habit stats
     $habitStats = array_fill_keys($data['columns'], 0);
