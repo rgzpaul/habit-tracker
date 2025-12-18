@@ -42,6 +42,7 @@ function calculateTrackingInfo(array $data): array {
     return [
         'startDate'       => $startDate,
         'endDate'         => $endDate,
+        'currentDate'     => $currentDate,
         'trackingDays'    => $trackingDays,
         'daysRemaining'   => $daysRemaining,
         'progressPercent' => $progressPercent,
@@ -195,8 +196,9 @@ $columns = $data['columns'];
                         $rowDate = clone $info['startDate'];
                         $rowDate->modify("+$i days");
                         $dateKey = $rowDate->format('Y-m-d');
+                        $isToday = $rowDate == $info['currentDate'];
                     ?>
-                        <tr>
+                        <tr<?= $isToday ? ' id="today"' : '' ?>>
                             <td class="px-3 md:px-6 py-4 whitespace-nowrap text-xs md:text-sm font-medium text-gray-900 date-column text-center">
                                 <?= formatDateWithDay($rowDate) ?>
                             </td>
@@ -217,6 +219,12 @@ $columns = $data['columns'];
 
     <script>
         $(document).ready(function() {
+            // Scroll to current day
+            const todayRow = document.getElementById('today');
+            if (todayRow) {
+                todayRow.scrollIntoView({ block: 'center' });
+            }
+
             $('.checkbox-cell').on('click', function(e) {
                 if (e.target.tagName !== 'INPUT') {
                     const checkbox = $(this).find('input[type="checkbox"]');
