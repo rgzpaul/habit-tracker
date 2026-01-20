@@ -131,7 +131,7 @@ $stats = calculateReportStats($data);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Report | <?= $stats['trackingDays'] ?> Days Tracker</title>
+    <title><?= $stats['trackingDays'] ?> Days Tracker - Report</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap" rel="stylesheet">
 </head>

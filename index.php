@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Habit Tracker - Main tracking interface
  * Display and toggle daily habit checkboxes
@@ -10,16 +11,19 @@ const DATA_FILE = 'data.json';
 // Data Functions
 // ============================================================================
 
-function loadData(): array {
+function loadData(): array
+{
     $content = file_get_contents(DATA_FILE);
     return json_decode($content, true) ?? ['columns' => [], 'days' => [], 'startDate' => date('Y-m-d'), 'endDate' => date('Y-m-d')];
 }
 
-function saveData(array $data): void {
+function saveData(array $data): void
+{
     file_put_contents(DATA_FILE, json_encode($data, JSON_PRETTY_PRINT));
 }
 
-function calculateTrackingInfo(array $data): array {
+function calculateTrackingInfo(array $data): array
+{
     $startDate = new DateTime($data['startDate']);
     $startDate->setTime(0, 0, 0);
 
@@ -53,7 +57,8 @@ function calculateTrackingInfo(array $data): array {
 // AJAX Handler
 // ============================================================================
 
-function handleCheckboxUpdate(array &$data): void {
+function handleCheckboxUpdate(array &$data): void
+{
     $day = $_POST['day'] ?? '';
     $column = $_POST['column'] ?? '';
     $checked = ($_POST['checked'] ?? '') === 'true';
@@ -79,11 +84,17 @@ function handleCheckboxUpdate(array &$data): void {
 // ============================================================================
 
 const DAY_NAMES = [
-    0 => 'DOM', 1 => 'LUN', 2 => 'MAR', 3 => 'MER',
-    4 => 'GIO', 5 => 'VEN', 6 => 'SAB'
+    0 => 'DOM',
+    1 => 'LUN',
+    2 => 'MAR',
+    3 => 'MER',
+    4 => 'GIO',
+    5 => 'VEN',
+    6 => 'SAB'
 ];
 
-function formatDateWithDay(DateTime $date): string {
+function formatDateWithDay(DateTime $date): string
+{
     $dayNum = (int) $date->format('w');
     return DAY_NAMES[$dayNum] . ' ' . $date->format('d/m/y');
 }
@@ -105,6 +116,7 @@ $columns = $data['columns'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -151,12 +163,14 @@ $columns = $data['columns'];
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
             }
+
             .table-wrapper table {
                 min-width: 800px;
             }
         }
     </style>
 </head>
+
 <body class="bg-gray-100 p-4 md:p-8 flex justify-center">
     <div class="max-w-4xl w-full">
 
@@ -179,7 +193,7 @@ $columns = $data['columns'];
         <!-- Tracking Table -->
         <div class="table-wrapper bg-white rounded-lg shadow">
             <table class="w-full">
-                <thead>
+                <thead class="sticky top-0">
                     <tr class="bg-gray-50">
                         <th class="px-3 md:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                             Day
@@ -205,12 +219,12 @@ $columns = $data['columns'];
                             <?php foreach ($columns as $column): ?>
                                 <td class="px-3 md:px-6 py-4 whitespace-nowrap text-xs md:text-sm text-gray-500 text-center checkbox-cell hover:bg-gray-100 transition-colors">
                                     <input type="checkbox"
-                                           name="<?= $dateKey ?>_<?= htmlspecialchars($column) ?>"
-                                           <?= isset($data['days'][$dateKey][$column]) ? 'checked' : '' ?>>
+                                        name="<?= $dateKey ?>_<?= htmlspecialchars($column) ?>"
+                                        <?= isset($data['days'][$dateKey][$column]) ? 'checked' : '' ?>>
                                 </td>
                             <?php endforeach; ?>
-                        </tr>
-                    <?php endfor; ?>
+                            </tr>
+                        <?php endfor; ?>
                 </tbody>
             </table>
         </div>
@@ -222,7 +236,9 @@ $columns = $data['columns'];
             // Scroll to current day
             const todayRow = document.getElementById('today');
             if (todayRow) {
-                todayRow.scrollIntoView({ block: 'center' });
+                todayRow.scrollIntoView({
+                    block: 'center'
+                });
             }
 
             $('.checkbox-cell').on('click', function(e) {
@@ -245,4 +261,5 @@ $columns = $data['columns'];
         });
     </script>
 </body>
+
 </html>
