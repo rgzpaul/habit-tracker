@@ -197,7 +197,7 @@ $columns = $data['columns'];
         <!-- Tracking Table -->
         <div class="table-wrapper bg-white rounded-xl border border-slate-200 overflow-hidden">
             <table class="w-full">
-                <thead>
+                <thead class="sticky top-0">
                     <tr class="border-b border-slate-100">
                         <th class="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">
                             Date
