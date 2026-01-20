@@ -14,7 +14,21 @@ const DATA_FILE = 'data.json';
 function loadData(): array
 {
     $content = file_get_contents(DATA_FILE);
-    return json_decode($content, true) ?? ['columns' => [], 'days' => [], 'startDate' => date('Y-m-d'), 'endDate' => date('Y-m-d')];
+    $data = json_decode($content, true) ?? ['columns' => [], 'days' => [], 'startDate' => date('Y-m-d'), 'endDate' => date('Y-m-d')];
+
+    // Migrate old format (simple string array) to new format (objects with name and frequency)
+    if (!empty($data['columns']) && isset($data['columns'][0]) && is_string($data['columns'][0])) {
+        $data['columns'] = array_map(function($name) {
+            return ['name' => $name, 'frequency' => 7];
+        }, $data['columns']);
+    }
+
+    return $data;
+}
+
+function getHabitName(mixed $habit): string
+{
+    return is_array($habit) ? $habit['name'] : $habit;
 }
 
 function saveData(array $data): void
@@ -203,9 +217,11 @@ $columns = $data['columns'];
                         <th class="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">
                             Date
                         </th>
-                        <?php foreach ($columns as $column): ?>
+                        <?php foreach ($columns as $column):
+                            $columnName = getHabitName($column);
+                        ?>
                             <th class="px-4 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wide">
-                                <?= htmlspecialchars($column) ?>
+                                <?= htmlspecialchars($columnName) ?>
                             </th>
                         <?php endforeach; ?>
                     </tr>
@@ -221,11 +237,13 @@ $columns = $data['columns'];
                             <td class="px-4 py-3 text-sm text-slate-600 tabular-nums <?= $isToday ? 'font-medium text-slate-800' : '' ?>">
                                 <?= formatDateWithDay($rowDate) ?>
                             </td>
-                            <?php foreach ($columns as $column): ?>
+                            <?php foreach ($columns as $column):
+                                $columnName = getHabitName($column);
+                            ?>
                                 <td class="px-4 py-3 text-center checkbox-cell">
                                     <input type="checkbox"
-                                        name="<?= $dateKey ?>_<?= htmlspecialchars($column) ?>"
-                                        <?= isset($data['days'][$dateKey][$column]) ? 'checked' : '' ?>>
+                                        name="<?= $dateKey ?>_<?= htmlspecialchars($columnName) ?>"
+                                        <?= isset($data['days'][$dateKey][$columnName]) ? 'checked' : '' ?>>
                                 </td>
                             <?php endforeach; ?>
                         </tr>

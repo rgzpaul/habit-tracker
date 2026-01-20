@@ -12,7 +12,31 @@ const DATA_FILE = 'data.json';
 
 function loadData(): array {
     $content = file_get_contents(DATA_FILE);
-    return json_decode($content, true) ?? ['columns' => [], 'days' => [], 'startDate' => date('Y-m-d'), 'endDate' => date('Y-m-d')];
+    $data = json_decode($content, true) ?? ['columns' => [], 'days' => [], 'startDate' => date('Y-m-d'), 'endDate' => date('Y-m-d')];
+
+    // Migrate old format (simple string array) to new format (objects with name and frequency)
+    if (!empty($data['columns']) && isset($data['columns'][0]) && is_string($data['columns'][0])) {
+        $data['columns'] = array_map(function($name) {
+            return ['name' => $name, 'frequency' => 7];
+        }, $data['columns']);
+    }
+
+    return $data;
+}
+
+function getHabitName(mixed $habit): string {
+    return is_array($habit) ? $habit['name'] : $habit;
+}
+
+function getHabitFrequency(mixed $habit): int {
+    return is_array($habit) ? ($habit['frequency'] ?? 7) : 7;
+}
+
+function calculateExpectedCompletions(int $trackingDays, int $frequencyPerWeek): int {
+    // Calculate expected completions based on weekly frequency
+    // For tracking period, expected = (tracking_days / 7) * frequency
+    $weeks = $trackingDays / 7;
+    return (int) round($weeks * $frequencyPerWeek);
 }
 
 function calculateReportStats(array $data): array {
@@ -31,8 +55,17 @@ function calculateReportStats(array $data): array {
         $daysRemaining = max(0, $endDate->diff($currentDate)->days + 1);
     }
 
+    // Build habit name to frequency map
+    $habitFrequencies = [];
+    $habitNames = [];
+    foreach ($data['columns'] as $habit) {
+        $name = getHabitName($habit);
+        $habitNames[] = $name;
+        $habitFrequencies[$name] = getHabitFrequency($habit);
+    }
+
     // Initialize habit stats
-    $habitStats = array_fill_keys($data['columns'], 0);
+    $habitStats = array_fill_keys($habitNames, 0);
     $totalChecks = 0;
 
     // Count completions within tracking period
@@ -48,18 +81,29 @@ function calculateReportStats(array $data): array {
         }
     }
 
-    $totalPossible = $trackingDays * count($data['columns']);
+    // Calculate expected completions based on frequency
+    $habitExpected = [];
+    $totalPossible = 0;
+    foreach ($habitNames as $name) {
+        $freq = $habitFrequencies[$name];
+        $expected = calculateExpectedCompletions($trackingDays, $freq);
+        $habitExpected[$name] = $expected;
+        $totalPossible += $expected;
+    }
+
     $progressPercent = $totalPossible > 0 ? round(($totalChecks / $totalPossible) * 100) : 0;
 
     return [
-        'startDate'       => $startDate,
-        'endDate'         => $endDate,
-        'trackingDays'    => $trackingDays,
-        'daysRemaining'   => $daysRemaining,
-        'habitStats'      => $habitStats,
-        'totalChecks'     => $totalChecks,
-        'totalPossible'   => $totalPossible,
-        'progressPercent' => $progressPercent,
+        'startDate'        => $startDate,
+        'endDate'          => $endDate,
+        'trackingDays'     => $trackingDays,
+        'daysRemaining'    => $daysRemaining,
+        'habitStats'       => $habitStats,
+        'habitExpected'    => $habitExpected,
+        'habitFrequencies' => $habitFrequencies,
+        'totalChecks'      => $totalChecks,
+        'totalPossible'    => $totalPossible,
+        'progressPercent'  => $progressPercent,
     ];
 }
 
@@ -148,17 +192,23 @@ $stats = calculateReportStats($data);
             </div>
             <div class="divide-y divide-slate-50">
                 <?php foreach ($data['columns'] as $habit):
-                    $completed = $stats['habitStats'][$habit];
-                    $percent = calculateHabitProgress($completed, $stats['trackingDays']);
+                    $habitName = getHabitName($habit);
+                    $frequency = getHabitFrequency($habit);
+                    $completed = $stats['habitStats'][$habitName];
+                    $expected = $stats['habitExpected'][$habitName];
+                    $percent = calculateHabitProgress($completed, $expected);
                 ?>
                     <div class="px-5 py-4">
                         <div class="flex items-center justify-between mb-2">
-                            <span class="text-sm text-slate-700"><?= htmlspecialchars($habit) ?></span>
-                            <span class="text-xs text-slate-400 tabular-nums"><?= $completed ?>/<?= $stats['trackingDays'] ?></span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm text-slate-700"><?= htmlspecialchars($habitName) ?></span>
+                                <span class="text-xs text-slate-400"><?= $frequency ?>x/wk</span>
+                            </div>
+                            <span class="text-xs text-slate-400 tabular-nums"><?= $completed ?>/<?= $expected ?></span>
                         </div>
                         <div class="flex items-center gap-3">
                             <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                <div class="h-full bg-slate-700 rounded-full transition-all duration-300" style="width: <?= $percent ?>%"></div>
+                                <div class="h-full bg-slate-700 rounded-full transition-all duration-300" style="width: <?= min(100, $percent) ?>%"></div>
                             </div>
                             <span class="text-xs text-slate-500 tabular-nums w-8"><?= $percent ?>%</span>
                         </div>
