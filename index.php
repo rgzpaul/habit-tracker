@@ -160,7 +160,6 @@ $columns = $data['columns'];
         @media (max-width: 768px) {
             .table-wrapper {
                 max-width: 100vw;
-                overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
             }
             .table-wrapper table { min-width: 600px; }
@@ -168,11 +167,11 @@ $columns = $data['columns'];
     </style>
 </head>
 
-<body class="bg-slate-50 min-h-screen">
-    <div class="max-w-3xl mx-auto px-4 py-8">
+<body class="bg-slate-50 h-screen flex flex-col">
+    <div class="max-w-3xl mx-auto px-4 py-8 flex flex-col flex-1 min-h-0 w-full">
 
         <!-- Header -->
-        <header class="mb-8">
+        <header class="mb-8 shrink-0">
             <div class="flex items-center justify-between mb-6">
                 <h1 class="text-xl font-semibold text-slate-800">
                     <?= $info['trackingDays'] ?> Days
@@ -195,7 +194,7 @@ $columns = $data['columns'];
         </header>
 
         <!-- Tracking Table -->
-        <div class="table-wrapper bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div class="table-wrapper bg-white rounded-xl border border-slate-200 overflow-auto flex-1 min-h-0">
             <table class="w-full">
                 <thead class="sticky top-0 bg-white z-10">
                     <tr class="border-b border-slate-100">
