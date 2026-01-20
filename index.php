@@ -96,7 +96,7 @@ const DAY_NAMES = [
 function formatDateWithDay(DateTime $date): string
 {
     $dayNum = (int) $date->format('w');
-    return DAY_NAMES[$dayNum] . ' ' . $date->format('d/m/y');
+    return DAY_NAMES[$dayNum] . ' ' . $date->format('d/m');
 }
 
 // ============================================================================
@@ -120,117 +120,115 @@ $columns = $data['columns'];
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $info['trackingDays'] ?> Days Tracker</title>
+    <title><?= $info['trackingDays'] ?> Days</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        .date-column {
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .checkbox-cell {
-            cursor: pointer;
-        }
-
+        body { font-family: 'Inter', sans-serif; }
+        .checkbox-cell { cursor: pointer; }
         .checkbox-cell input[type="checkbox"] {
             appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            width: 24px;
-            height: 24px;
-            border: none;
-            outline: none;
+            width: 20px;
+            height: 20px;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 4px;
             cursor: pointer;
             position: relative;
-            background: transparent;
+            background: white;
+            transition: all 0.15s ease;
         }
-
-        .checkbox-cell input[type="checkbox"]:checked::before {
-            content: '\2713';
+        .checkbox-cell input[type="checkbox"]:hover {
+            border-color: #94a3b8;
+        }
+        .checkbox-cell input[type="checkbox"]:checked {
+            background: #334155;
+            border-color: #334155;
+        }
+        .checkbox-cell input[type="checkbox"]:checked::after {
+            content: '';
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #2563eb;
-            font-size: 20px;
-            font-weight: 900;
+            left: 6px;
+            top: 2px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
         }
-
         @media (max-width: 768px) {
             .table-wrapper {
                 max-width: 100vw;
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
             }
-
-            .table-wrapper table {
-                min-width: 800px;
-            }
+            .table-wrapper table { min-width: 600px; }
         }
     </style>
 </head>
 
-<body class="bg-gray-100 p-4 md:p-8 flex justify-center">
-    <div class="max-w-4xl w-full">
+<body class="bg-slate-50 min-h-screen">
+    <div class="max-w-3xl mx-auto px-4 py-8">
 
         <!-- Header -->
-        <header class="flex flex-col gap-4 mb-4 md:mb-6">
-            <div class="flex justify-between items-center">
-                <h1 class="text-2xl md:text-3xl font-bold text-gray-800">
-                    <?= $info['trackingDays'] ?> Days Tracker
+        <header class="mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <h1 class="text-xl font-semibold text-slate-800">
+                    <?= $info['trackingDays'] ?> Days
                 </h1>
-                <nav class="flex gap-2">
-                    <a href="admin.php" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium">Admin</a>
-                    <a href="report.php" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium">Report</a>
+                <nav class="flex items-center gap-1">
+                    <a href="admin.php" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" title="Settings">
+                        <i data-lucide="settings" class="w-5 h-5"></i>
+                    </a>
+                    <a href="report.php" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" title="Report">
+                        <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+                    </a>
                 </nav>
             </div>
-            <div class="w-full md:w-64 md:ml-auto">
-                <div class="flex justify-between text-sm text-gray-600 mb-1">
-                    <span><?= $info['daysRemaining'] ?> days remaining</span>
-                    <span><?= $info['progressPercent'] ?>%</span>
+            <div class="flex items-center gap-4">
+                <div class="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                    <div class="h-full bg-slate-700 rounded-full transition-all duration-300" style="width: <?= $info['progressPercent'] ?>%"></div>
                 </div>
-                <div class="w-full bg-gray-200 rounded-full h-2.5">
-                    <div class="bg-blue-600 h-2.5 rounded-full" style="width: <?= $info['progressPercent'] ?>%"></div>
-                </div>
+                <span class="text-sm text-slate-500 tabular-nums"><?= $info['daysRemaining'] ?>d left</span>
             </div>
         </header>
 
         <!-- Tracking Table -->
-        <div class="table-wrapper bg-white rounded-lg shadow">
+        <div class="table-wrapper bg-white rounded-xl border border-slate-200 overflow-hidden">
             <table class="w-full">
-                <thead class="sticky top-0">
-                    <tr class="bg-gray-50">
-                        <th class="px-3 md:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                            Day
+                <thead>
+                    <tr class="border-b border-slate-100">
+                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">
+                            Date
                         </th>
                         <?php foreach ($columns as $column): ?>
-                            <th class="px-3 md:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
+                            <th class="px-4 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wide">
                                 <?= htmlspecialchars($column) ?>
                             </th>
                         <?php endforeach; ?>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="divide-y divide-slate-50">
                     <?php for ($i = 0; $i < $info['trackingDays']; $i++):
                         $rowDate = clone $info['startDate'];
                         $rowDate->modify("+$i days");
                         $dateKey = $rowDate->format('Y-m-d');
                         $isToday = $rowDate == $info['currentDate'];
                     ?>
-                        <tr<?= $isToday ? ' id="today"' : '' ?>>
-                            <td class="px-3 md:px-6 py-4 whitespace-nowrap text-xs md:text-sm font-medium text-gray-900 date-column text-center">
+                        <tr class="<?= $isToday ? 'bg-slate-50' : 'hover:bg-slate-25' ?>"<?= $isToday ? ' id="today"' : '' ?>>
+                            <td class="px-4 py-3 text-sm text-slate-600 tabular-nums <?= $isToday ? 'font-medium text-slate-800' : '' ?>">
                                 <?= formatDateWithDay($rowDate) ?>
                             </td>
                             <?php foreach ($columns as $column): ?>
-                                <td class="px-3 md:px-6 py-4 whitespace-nowrap text-xs md:text-sm text-gray-500 text-center checkbox-cell hover:bg-gray-100 transition-colors">
+                                <td class="px-4 py-3 text-center checkbox-cell">
                                     <input type="checkbox"
                                         name="<?= $dateKey ?>_<?= htmlspecialchars($column) ?>"
                                         <?= isset($data['days'][$dateKey][$column]) ? 'checked' : '' ?>>
                                 </td>
                             <?php endforeach; ?>
-                            </tr>
-                        <?php endfor; ?>
+                        </tr>
+                    <?php endfor; ?>
                 </tbody>
             </table>
         </div>
@@ -238,13 +236,12 @@ $columns = $data['columns'];
     </div>
 
     <script>
+        lucide.createIcons();
+
         $(document).ready(function() {
-            // Scroll to current day
             const todayRow = document.getElementById('today');
             if (todayRow) {
-                todayRow.scrollIntoView({
-                    block: 'center'
-                });
+                todayRow.scrollIntoView({ block: 'center', behavior: 'smooth' });
             }
 
             $('.checkbox-cell').on('click', function(e) {

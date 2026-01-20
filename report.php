@@ -63,59 +63,8 @@ function calculateReportStats(array $data): array {
     ];
 }
 
-// ============================================================================
-// Day Name Helpers
-// ============================================================================
-
-const DAY_NAMES = [
-    0 => 'DOM', 1 => 'LUN', 2 => 'MAR', 3 => 'MER',
-    4 => 'GIO', 5 => 'VEN', 6 => 'SAB'
-];
-
-function formatDateWithDay(DateTime $date): string {
-    $dayNum = (int) $date->format('w');
-    return DAY_NAMES[$dayNum] . ' ' . $date->format('d/m/y');
-}
-
 function calculateHabitProgress(int $completed, int $total): int {
     return $total > 0 ? round(($completed / $total) * 100) : 0;
-}
-
-// ============================================================================
-// HTML Rendering Helpers
-// ============================================================================
-
-function renderSummaryCard(string $title, string $value, string $color = 'blue'): string {
-    return <<<HTML
-    <div class="bg-white rounded-lg shadow p-6">
-        <h2 class="text-lg font-semibold mb-4">$title</h2>
-        <div class="text-3xl font-bold text-{$color}-600">$value</div>
-    </div>
-    HTML;
-}
-
-function renderHabitRow(string $habit, int $completed, int $total): string {
-    $escaped = htmlspecialchars($habit);
-    $percent = calculateHabitProgress($completed, $total);
-
-    return <<<HTML
-    <tr>
-        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-            $escaped
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-            $completed/$total
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-            <div class="flex items-center justify-center">
-                <div class="w-full bg-gray-200 rounded-full h-2.5 max-w-[200px] mr-2">
-                    <div class="bg-blue-600 h-2.5 rounded-full" style="width: {$percent}%"></div>
-                </div>
-                {$percent}%
-            </div>
-        </td>
-    </tr>
-    HTML;
 }
 
 // ============================================================================
@@ -131,59 +80,100 @@ $stats = calculateReportStats($data);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $stats['trackingDays'] ?> Days Tracker - Report</title>
+    <title>Report</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
 </head>
-<body class="bg-gray-100 p-4 md:p-8">
-    <div class="max-w-4xl mx-auto">
+<body class="bg-slate-50 min-h-screen">
+    <div class="max-w-2xl mx-auto px-4 py-8">
 
         <!-- Header -->
-        <header class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl md:text-3xl font-bold text-gray-800">
-                <?= $stats['trackingDays'] ?> Days Tracker - Report
-            </h1>
-            <nav class="flex gap-2">
-                <a href="index.php" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm">Tracker</a>
-                <a href="admin.php" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm">Admin</a>
+        <header class="flex items-center justify-between mb-8">
+            <h1 class="text-xl font-semibold text-slate-800">Report</h1>
+            <nav class="flex items-center gap-1">
+                <a href="index.php" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" title="Tracker">
+                    <i data-lucide="layout-grid" class="w-5 h-5"></i>
+                </a>
+                <a href="admin.php" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" title="Settings">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                </a>
             </nav>
         </header>
 
-        <!-- Summary Cards -->
-        <section class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-            <?= renderSummaryCard('Total Progress', $stats['totalChecks'] . '/' . $stats['totalPossible'], 'blue') ?>
-            <?= renderSummaryCard('Days Remaining', (string) $stats['daysRemaining'], 'purple') ?>
+        <!-- Overview -->
+        <section class="grid grid-cols-3 gap-3 mb-8">
+            <div class="bg-white rounded-xl border border-slate-200 p-4">
+                <div class="text-2xl font-semibold text-slate-800"><?= $stats['progressPercent'] ?>%</div>
+                <div class="text-xs text-slate-400 uppercase tracking-wide mt-1">Complete</div>
+            </div>
+            <div class="bg-white rounded-xl border border-slate-200 p-4">
+                <div class="text-2xl font-semibold text-slate-800"><?= $stats['totalChecks'] ?></div>
+                <div class="text-xs text-slate-400 uppercase tracking-wide mt-1">Checks</div>
+            </div>
+            <div class="bg-white rounded-xl border border-slate-200 p-4">
+                <div class="text-2xl font-semibold text-slate-800"><?= $stats['daysRemaining'] ?></div>
+                <div class="text-xs text-slate-400 uppercase tracking-wide mt-1">Days Left</div>
+            </div>
         </section>
 
-        <!-- Tracking Period -->
-        <section class="bg-white rounded-lg shadow p-6 mb-8">
-            <h2 class="text-lg font-semibold mb-4">Tracking Period</h2>
-            <p class="text-sm text-gray-600">
-                Start Date: <span class="font-bold"><?= formatDateWithDay($stats['startDate']) ?></span>
-            </p>
-            <p class="text-sm text-gray-600">
-                End Date: <span class="font-bold"><?= formatDateWithDay($stats['endDate']) ?></span>
-            </p>
+        <!-- Period -->
+        <section class="bg-white rounded-xl border border-slate-200 p-5 mb-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-slate-100 rounded-lg">
+                        <i data-lucide="calendar" class="w-4 h-4 text-slate-500"></i>
+                    </div>
+                    <div>
+                        <div class="text-sm text-slate-800"><?= $stats['startDate']->format('M j') ?> &rarr; <?= $stats['endDate']->format('M j, Y') ?></div>
+                        <div class="text-xs text-slate-400"><?= $stats['trackingDays'] ?> days total</div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm text-slate-800"><?= $stats['totalChecks'] ?>/<?= $stats['totalPossible'] ?></div>
+                    <div class="text-xs text-slate-400">completed</div>
+                </div>
+            </div>
         </section>
 
-        <!-- Habit Statistics Table -->
-        <section class="bg-white rounded-lg shadow overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Habit</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Completed</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Progress</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    <?php foreach ($data['columns'] as $habit): ?>
-                        <?= renderHabitRow($habit, $stats['habitStats'][$habit], $stats['trackingDays']) ?>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+        <!-- Habits -->
+        <section class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-100">
+                <h2 class="text-sm font-medium text-slate-800">Habits</h2>
+            </div>
+            <div class="divide-y divide-slate-50">
+                <?php foreach ($data['columns'] as $habit):
+                    $completed = $stats['habitStats'][$habit];
+                    $percent = calculateHabitProgress($completed, $stats['trackingDays']);
+                ?>
+                    <div class="px-5 py-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm text-slate-700"><?= htmlspecialchars($habit) ?></span>
+                            <span class="text-xs text-slate-400 tabular-nums"><?= $completed ?>/<?= $stats['trackingDays'] ?></span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-slate-700 rounded-full transition-all duration-300" style="width: <?= $percent ?>%"></div>
+                            </div>
+                            <span class="text-xs text-slate-500 tabular-nums w-8"><?= $percent ?>%</span>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+                <?php if (empty($data['columns'])): ?>
+                    <div class="px-5 py-8 text-center text-sm text-slate-400">
+                        No habits yet
+                    </div>
+                <?php endif; ?>
+            </div>
         </section>
 
     </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
 </body>
 </html>
