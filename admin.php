@@ -150,7 +150,7 @@ $stats = calculateStats($data);
         </header>
 
         <!-- Stats -->
-        <section id="stats" class="grid grid-cols-4 gap-3 mb-8">
+        <section id="stats" class="grid max-md:grid-cols-2 grid-cols-4 gap-3 mb-8">
             <div class="bg-white rounded-xl border border-slate-200 p-4">
                 <div class="text-2xl font-semibold text-slate-800" id="stat-habits"><?= $stats['habitsCount'] ?></div>
                 <div class="text-xs text-slate-400 uppercase tracking-wide mt-1">Habits</div>
