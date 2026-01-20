@@ -316,6 +316,23 @@ $stats = calculateStats($data);
                 });
             });
 
+            // Update date range preview dynamically
+            function updateDateRangePreview() {
+                const startDate = $('#start-date').val();
+                const numberOfDays = parseInt($('#number-of-days').val()) || 0;
+
+                if (startDate && numberOfDays > 0) {
+                    const start = new Date(startDate + 'T00:00:00');
+                    const end = new Date(start);
+                    end.setDate(end.getDate() + numberOfDays - 1);
+                    const endStr = end.toISOString().split('T')[0];
+                    $('#current-period').html(`${startDate} &rarr; ${endStr}`);
+                }
+            }
+
+            // Listen for input changes on Start Date and Days
+            $('#start-date, #number-of-days').on('input change', updateDateRangePreview);
+
             // Update Settings
             $('#settings-form').on('submit', function(e) {
                 e.preventDefault();
@@ -327,13 +344,8 @@ $stats = calculateStats($data);
                     start_date: startDate,
                     number_of_days: numberOfDays
                 }, function() {
-                    const start = new Date(startDate);
-                    const end = new Date(start);
-                    end.setDate(end.getDate() + parseInt(numberOfDays) - 1);
-                    const endStr = end.toISOString().split('T')[0];
-
                     $('#stat-days').text(numberOfDays);
-                    $('#current-period').html(`${startDate} &rarr; ${endStr}`);
+                    updateDateRangePreview();
                 });
             });
 
