@@ -175,11 +175,17 @@ $columns = $data['columns'];
     <div class="max-w-4xl w-full">
 
         <!-- Header -->
-        <header class="flex justify-between items-center mb-4 md:mb-6">
-            <h1 class="text-2xl md:text-3xl font-bold text-gray-800">
-                <?= $info['trackingDays'] ?> Days Tracker
-            </h1>
-            <div class="w-64">
+        <header class="flex flex-col gap-4 mb-4 md:mb-6">
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl md:text-3xl font-bold text-gray-800">
+                    <?= $info['trackingDays'] ?> Days Tracker
+                </h1>
+                <nav class="flex gap-2">
+                    <a href="admin.php" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium">Admin</a>
+                    <a href="report.php" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium">Report</a>
+                </nav>
+            </div>
+            <div class="w-full md:w-64 md:ml-auto">
                 <div class="flex justify-between text-sm text-gray-600 mb-1">
                     <span><?= $info['daysRemaining'] ?> days remaining</span>
                     <span><?= $info['progressPercent'] ?>%</span>
