@@ -135,7 +135,7 @@ $stats = calculateReportStats($data);
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
-    <div class="max-w-2xl mx-auto px-4 py-8">
+    <main class="max-w-3xl mx-auto px-4 py-8">
 
         <!-- Header -->
         <header class="flex items-center justify-between mb-8">
@@ -222,7 +222,7 @@ $stats = calculateReportStats($data);
             </div>
         </section>
 
-    </div>
+    </main>
 
     <script>
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');

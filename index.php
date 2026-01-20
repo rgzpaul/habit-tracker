@@ -184,7 +184,7 @@ $columns = $data['columns'];
 </head>
 
 <body class="bg-slate-50 h-screen flex flex-col">
-    <div class="max-w-3xl mx-auto px-4 py-8 flex flex-col flex-1 min-h-0 w-full">
+    <main class="max-w-3xl mx-auto px-4 py-8 flex flex-col flex-1 min-h-0 w-full">
 
         <!-- Header -->
         <header class="mb-8 shrink-0">
@@ -252,7 +252,7 @@ $columns = $data['columns'];
             </table>
         </div>
 
-    </div>
+    </main>
 
     <script>
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
