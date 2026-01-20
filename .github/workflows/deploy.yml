@@ -22,3 +22,6 @@ jobs:
           protocol: ftp
           port: 21
           server-dir: ${{ secrets.FTP_PATH }}
+          exclude: |
+            data.json
+            README.md
