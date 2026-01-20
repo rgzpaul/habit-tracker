@@ -12,7 +12,31 @@ const DATA_FILE = 'data.json';
 
 function loadData(): array {
     $content = file_get_contents(DATA_FILE);
-    return json_decode($content, true) ?? ['columns' => [], 'days' => [], 'startDate' => date('Y-m-d'), 'endDate' => date('Y-m-d')];
+    $data = json_decode($content, true) ?? ['columns' => [], 'days' => [], 'startDate' => date('Y-m-d'), 'endDate' => date('Y-m-d')];
+
+    // Migrate old format (simple string array) to new format (objects with name and frequency)
+    if (!empty($data['columns']) && isset($data['columns'][0]) && is_string($data['columns'][0])) {
+        $data['columns'] = array_map(function($name) {
+            return ['name' => $name, 'frequency' => 7]; // Default to daily (7x/week)
+        }, $data['columns']);
+    }
+
+    return $data;
+}
+
+function getHabitNames(array $data): array {
+    return array_map(function($habit) {
+        return is_array($habit) ? $habit['name'] : $habit;
+    }, $data['columns']);
+}
+
+function getHabitByName(array $data, string $name): ?array {
+    foreach ($data['columns'] as $habit) {
+        if ((is_array($habit) ? $habit['name'] : $habit) === $name) {
+            return is_array($habit) ? $habit : ['name' => $habit, 'frequency' => 7];
+        }
+    }
+    return null;
 }
 
 function saveData(array $data): void {
@@ -34,6 +58,7 @@ function calculateStats(array $data): array {
         'totalChecks'   => $totalChecks,
         'startDate'     => $data['startDate'],
         'endDate'       => $data['endDate'],
+        'columns'       => $data['columns'],
     ];
 }
 
@@ -48,16 +73,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     switch ($action) {
         case 'add_habit':
             $habitName = trim($_POST['habit_name'] ?? '');
-            if ($habitName && !in_array($habitName, $data['columns'])) {
-                $data['columns'][] = $habitName;
+            $frequency = intval($_POST['frequency'] ?? 7);
+            $frequency = max(1, min(7, $frequency)); // Clamp between 1 and 7
+            $habitNames = getHabitNames($data);
+            if ($habitName && !in_array($habitName, $habitNames)) {
+                $data['columns'][] = ['name' => $habitName, 'frequency' => $frequency];
                 saveData($data);
             }
             break;
 
+        case 'update_habit_frequency':
+            $habitName = $_POST['habit_name'] ?? '';
+            $frequency = intval($_POST['frequency'] ?? 7);
+            $frequency = max(1, min(7, $frequency));
+            foreach ($data['columns'] as &$habit) {
+                if ((is_array($habit) ? $habit['name'] : $habit) === $habitName) {
+                    $habit = ['name' => $habitName, 'frequency' => $frequency];
+                    break;
+                }
+            }
+            saveData($data);
+            break;
+
         case 'remove_habit':
             $habitName = $_POST['habit_name'] ?? '';
-            if (in_array($habitName, $data['columns'])) {
-                $data['columns'] = array_values(array_filter($data['columns'], fn($h) => $h !== $habitName));
+            $habitNames = getHabitNames($data);
+            if (in_array($habitName, $habitNames)) {
+                $data['columns'] = array_values(array_filter($data['columns'], function($h) use ($habitName) {
+                    return (is_array($h) ? $h['name'] : $h) !== $habitName;
+                }));
                 foreach ($data['days'] as $date => &$dayData) {
                     unset($dayData[$habitName]);
                     if (empty($dayData)) {
@@ -180,6 +224,16 @@ $stats = calculateStats($data);
                            placeholder="New habit"
                            required
                            class="flex-1 px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-transparent">
+                    <div class="flex items-center gap-1">
+                        <input type="number"
+                               id="habit-frequency"
+                               value="7"
+                               min="1"
+                               max="7"
+                               title="Times per week"
+                               class="w-14 px-2 py-2 text-sm text-center border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-transparent">
+                        <span class="text-xs text-slate-400">/wk</span>
+                    </div>
                     <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors">
                         <i data-lucide="plus" class="w-4 h-4"></i>
                         Add
@@ -188,12 +242,26 @@ $stats = calculateStats($data);
             </form>
 
             <div id="habits-list" class="space-y-1">
-                <?php foreach ($data['columns'] as $habit): ?>
-                    <div class="habit-item flex items-center justify-between py-2 px-3 rounded-lg hover:bg-slate-50 group" data-habit="<?= htmlspecialchars($habit) ?>">
-                        <span class="text-sm text-slate-600"><?= htmlspecialchars($habit) ?></span>
-                        <button class="remove-habit p-1 text-slate-300 hover:text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <i data-lucide="x" class="w-4 h-4"></i>
-                        </button>
+                <?php foreach ($data['columns'] as $habit):
+                    $habitName = is_array($habit) ? $habit['name'] : $habit;
+                    $habitFreq = is_array($habit) ? $habit['frequency'] : 7;
+                ?>
+                    <div class="habit-item flex items-center justify-between py-2 px-3 rounded-lg hover:bg-slate-50 group" data-habit="<?= htmlspecialchars($habitName) ?>" data-frequency="<?= $habitFreq ?>">
+                        <span class="text-sm text-slate-600"><?= htmlspecialchars($habitName) ?></span>
+                        <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                                <input type="number"
+                                       class="habit-freq-input w-10 px-1 py-0.5 text-xs text-center border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-slate-300"
+                                       value="<?= $habitFreq ?>"
+                                       min="1"
+                                       max="7"
+                                       title="Times per week">
+                                <span class="text-xs text-slate-400">/wk</span>
+                            </div>
+                            <button class="remove-habit p-1 text-slate-300 hover:text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </button>
+                        </div>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -285,22 +353,45 @@ $stats = calculateStats($data);
             $('#add-habit-form').on('submit', function(e) {
                 e.preventDefault();
                 const habitName = $('#habit-name').val().trim();
+                const frequency = $('#habit-frequency').val() || 7;
                 if (!habitName) return;
 
-                $.post('admin.php', { action: 'add_habit', habit_name: habitName }, function() {
+                $.post('admin.php', { action: 'add_habit', habit_name: habitName, frequency: frequency }, function() {
                     const html = `
-                        <div class="habit-item flex items-center justify-between py-2 px-3 rounded-lg hover:bg-slate-50 group" data-habit="${habitName}">
+                        <div class="habit-item flex items-center justify-between py-2 px-3 rounded-lg hover:bg-slate-50 group" data-habit="${habitName}" data-frequency="${frequency}">
                             <span class="text-sm text-slate-600">${habitName}</span>
-                            <button class="remove-habit p-1 text-slate-300 hover:text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <i data-lucide="x" class="w-4 h-4"></i>
-                            </button>
+                            <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                                    <input type="number"
+                                           class="habit-freq-input w-10 px-1 py-0.5 text-xs text-center border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-slate-300"
+                                           value="${frequency}"
+                                           min="1"
+                                           max="7"
+                                           title="Times per week">
+                                    <span class="text-xs text-slate-400">/wk</span>
+                                </div>
+                                <button class="remove-habit p-1 text-slate-300 hover:text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <i data-lucide="x" class="w-4 h-4"></i>
+                                </button>
+                            </div>
                         </div>
                     `;
                     $('#habits-list').append(html);
                     $('#habit-name').val('');
+                    $('#habit-frequency').val(7);
                     lucide.createIcons();
                     updateHabitCount(1);
                 });
+            });
+
+            // Update habit frequency
+            $(document).on('change', '.habit-freq-input', function() {
+                const item = $(this).closest('.habit-item');
+                const habitName = item.data('habit');
+                const frequency = $(this).val();
+
+                $.post('admin.php', { action: 'update_habit_frequency', habit_name: habitName, frequency: frequency });
+                item.data('frequency', frequency);
             });
 
             // Remove Habit
