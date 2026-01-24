@@ -223,11 +223,11 @@ $stats = calculateReportStats($data);
         <header class="flex items-center justify-between mb-8">
             <h1 class="text-xl font-semibold text-slate-800">Report</h1>
             <nav class="flex items-center gap-1">
-                <a href="index.php" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" title="Tracker">
-                    <i data-lucide="layout-grid" class="w-5 h-5"></i>
-                </a>
                 <a href="admin.php" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" title="Settings">
                     <i data-lucide="settings" class="w-5 h-5"></i>
+                </a>
+                <a href="index.php" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" title="Tracker">
+                    <i data-lucide="layout-grid" class="w-5 h-5"></i>
                 </a>
             </nav>
         </header>
