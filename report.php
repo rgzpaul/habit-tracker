@@ -55,6 +55,15 @@ function calculateReportStats(array $data): array {
         $daysRemaining = max(0, $endDate->diff($currentDate)->days + 1);
     }
 
+    // Calculate elapsed days (from start to today, capped at end date)
+    if ($currentDate < $startDate) {
+        $elapsedDays = 0;
+    } elseif ($currentDate > $endDate) {
+        $elapsedDays = $trackingDays;
+    } else {
+        $elapsedDays = $startDate->diff($currentDate)->days + 1;
+    }
+
     // Build habit name to frequency map
     $habitFrequencies = [];
     $habitNames = [];
@@ -81,29 +90,37 @@ function calculateReportStats(array $data): array {
         }
     }
 
-    // Calculate expected completions based on frequency
+    // Calculate expected completions based on frequency (total and elapsed)
     $habitExpected = [];
+    $habitElapsedExpected = [];
     $totalPossible = 0;
+    $totalElapsedPossible = 0;
     foreach ($habitNames as $name) {
         $freq = $habitFrequencies[$name];
         $expected = calculateExpectedCompletions($trackingDays, $freq);
+        $elapsedExpected = calculateExpectedCompletions($elapsedDays, $freq);
         $habitExpected[$name] = $expected;
+        $habitElapsedExpected[$name] = $elapsedExpected;
         $totalPossible += $expected;
+        $totalElapsedPossible += $elapsedExpected;
     }
 
-    $progressPercent = $totalPossible > 0 ? round(($totalChecks / $totalPossible) * 100) : 0;
+    $progressPercent = $totalElapsedPossible > 0 ? round(($totalChecks / $totalElapsedPossible) * 100) : 0;
 
     return [
-        'startDate'        => $startDate,
-        'endDate'          => $endDate,
-        'trackingDays'     => $trackingDays,
-        'daysRemaining'    => $daysRemaining,
-        'habitStats'       => $habitStats,
-        'habitExpected'    => $habitExpected,
-        'habitFrequencies' => $habitFrequencies,
-        'totalChecks'      => $totalChecks,
-        'totalPossible'    => $totalPossible,
-        'progressPercent'  => $progressPercent,
+        'startDate'            => $startDate,
+        'endDate'              => $endDate,
+        'trackingDays'         => $trackingDays,
+        'elapsedDays'          => $elapsedDays,
+        'daysRemaining'        => $daysRemaining,
+        'habitStats'           => $habitStats,
+        'habitExpected'        => $habitExpected,
+        'habitElapsedExpected' => $habitElapsedExpected,
+        'habitFrequencies'     => $habitFrequencies,
+        'totalChecks'          => $totalChecks,
+        'totalPossible'        => $totalPossible,
+        'totalElapsedPossible' => $totalElapsedPossible,
+        'progressPercent'      => $progressPercent,
     ];
 }
 
@@ -195,8 +212,10 @@ $stats = calculateReportStats($data);
                     $habitName = getHabitName($habit);
                     $frequency = getHabitFrequency($habit);
                     $completed = $stats['habitStats'][$habitName];
-                    $expected = $stats['habitExpected'][$habitName];
-                    $percent = calculateHabitProgress($completed, $expected);
+                    $elapsedExpected = $stats['habitElapsedExpected'][$habitName];
+                    $percent = calculateHabitProgress($completed, $elapsedExpected);
+                    $filledPercent = min(100, $percent);
+                    $missedPercent = max(0, 100 - $filledPercent);
                 ?>
                     <div class="px-5 py-4">
                         <div class="flex items-center justify-between mb-2">
@@ -204,11 +223,12 @@ $stats = calculateReportStats($data);
                                 <span class="text-sm text-slate-700"><?= htmlspecialchars($habitName) ?></span>
                                 <span class="text-xs text-slate-400"><?= $frequency ?>x/wk</span>
                             </div>
-                            <span class="text-xs text-slate-400 tabular-nums"><?= $completed ?>/<?= $expected ?></span>
+                            <span class="text-xs text-slate-400 tabular-nums"><?= $completed ?>/<?= $elapsedExpected ?></span>
                         </div>
                         <div class="flex items-center gap-3">
-                            <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                <div class="h-full bg-slate-700 rounded-full transition-all duration-300" style="width: <?= min(100, $percent) ?>%"></div>
+                            <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden flex">
+                                <div class="h-full bg-slate-700 transition-all duration-300" style="width: <?= $filledPercent ?>%"></div>
+                                <div class="h-full bg-slate-300 transition-all duration-300" style="width: <?= $missedPercent ?>%"></div>
                             </div>
                             <span class="text-xs text-slate-500 tabular-nums w-8"><?= $percent ?>%</span>
                         </div>
