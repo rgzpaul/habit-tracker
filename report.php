@@ -73,10 +73,16 @@ function calculateWeeklyDots(array $data, string $habitName, int $frequency, Dat
             // Future week - all gray
             $grayDots += $frequency;
         } else {
-            // Current week (partial) - green for done, gray for remaining potential
+            // Current week - calculate what's achievable vs impossible
+            $daysRemaining = $currentDate->diff($weekEnd)->days; // days after today
+            $maxPossible = $weekCompletions + $daysRemaining;
+
             $greenDots += min($weekCompletions, $frequency);
-            $remaining = max(0, $frequency - $weekCompletions);
-            $grayDots += $remaining;
+            $impossibleToRecover = max(0, $frequency - $maxPossible);
+            $stillAchievable = max(0, min($daysRemaining, $frequency - $weekCompletions));
+
+            $redDots += $impossibleToRecover;
+            $grayDots += $stillAchievable;
         }
 
         $weekStart->modify('+7 days');
