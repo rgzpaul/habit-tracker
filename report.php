@@ -300,7 +300,7 @@ $stats = calculateReportStats($data);
                             </div>
                             <span class="text-xs text-slate-400 tabular-nums"><?= $completed ?>/<?= $expected ?></span>
                         </div>
-                        <div class="flex items-center gap-3">
+                        <div class="flex items-start gap-3">
                             <div class="flex-1 flex gap-1 flex-wrap items-center">
                                 <?php foreach ($weeks as $week): ?>
                                     <div class="flex gap-0.5 border border-slate-200 rounded px-1 py-0.5">
