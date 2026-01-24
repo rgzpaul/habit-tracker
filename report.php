@@ -316,7 +316,7 @@ $stats = calculateReportStats($data);
                                     </div>
                                 <?php endforeach; ?>
                             </div>
-                            <span class="text-xs text-left text-slate-500 tabular-nums w-8"><?= $percent ?>%</span>
+                            <span class="text-xs text-right text-slate-500 tabular-nums w-8"><?= $percent ?>%</span>
                         </div>
                     </div>
                 <?php endforeach; ?>
