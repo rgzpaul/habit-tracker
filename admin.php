@@ -194,7 +194,7 @@ $stats = calculateStats($data);
         </header>
 
         <!-- Stats -->
-        <section id="stats" class="grid max-md:grid-cols-2 grid-cols-4 gap-3 mb-8">
+        <section id="stats" class="grid grid-cols-2 gap-3 mb-8">
             <div class="bg-white rounded-xl border border-slate-200 p-4">
                 <div class="text-2xl font-semibold text-slate-800" id="stat-habits"><?= $stats['habitsCount'] ?></div>
                 <div class="text-xs text-slate-400 uppercase tracking-wide mt-1">Habits</div>
@@ -202,14 +202,6 @@ $stats = calculateStats($data);
             <div class="bg-white rounded-xl border border-slate-200 p-4">
                 <div class="text-2xl font-semibold text-slate-800" id="stat-days"><?= $stats['trackingDays'] ?></div>
                 <div class="text-xs text-slate-400 uppercase tracking-wide mt-1">Days</div>
-            </div>
-            <div class="bg-white rounded-xl border border-slate-200 p-4">
-                <div class="text-2xl font-semibold text-slate-800" id="stat-data-days"><?= $stats['daysWithData'] ?></div>
-                <div class="text-xs text-slate-400 uppercase tracking-wide mt-1">Active</div>
-            </div>
-            <div class="bg-white rounded-xl border border-slate-200 p-4">
-                <div class="text-2xl font-semibold text-slate-800" id="stat-checks"><?= $stats['totalChecks'] ?></div>
-                <div class="text-xs text-slate-400 uppercase tracking-wide mt-1">Checks</div>
             </div>
         </section>
 
@@ -465,8 +457,7 @@ $stats = calculateStats($data);
                 if (!confirm('Reset all tracking data? This cannot be undone.')) return;
 
                 $.post('admin.php', { action: 'reset_data' }, function() {
-                    $('#stat-data-days').text('0');
-                    $('#stat-checks').text('0');
+                    location.reload();
                 });
             });
 
