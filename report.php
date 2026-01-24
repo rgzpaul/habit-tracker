@@ -40,9 +40,10 @@ function calculateExpectedCompletions(int $trackingDays, int $frequencyPerWeek):
 }
 
 function calculateWeeklyDots(array $data, string $habitName, int $frequency, DateTime $startDate, DateTime $endDate, DateTime $currentDate): array {
-    $greenDots = 0;
-    $redDots = 0;
-    $grayDots = 0;
+    $weeks = [];
+    $totalGreen = 0;
+    $totalRed = 0;
+    $totalGray = 0;
 
     // Iterate through each week
     $weekStart = clone $startDate;
@@ -64,28 +65,42 @@ function calculateWeeklyDots(array $data, string $habitName, int $frequency, Dat
             $checkDate->modify('+1 day');
         }
 
+        $weekData = ['green' => 0, 'red' => 0, 'gray' => 0];
+
         // Determine if this week is elapsed, current, or future
         if ($weekEnd < $currentDate) {
             // Fully elapsed week - cap at frequency, rest is red
-            $greenDots += min($weekCompletions, $frequency);
-            $redDots += max(0, $frequency - $weekCompletions);
+            $weekData['green'] = min($weekCompletions, $frequency);
+            $weekData['red'] = max(0, $frequency - $weekCompletions);
         } elseif ($weekStart > $currentDate) {
             // Future week - all gray
-            $grayDots += $frequency;
+            $weekData['gray'] = $frequency;
         } else {
-            // Current week (partial) - green for done, gray for remaining potential
-            $greenDots += min($weekCompletions, $frequency);
-            $remaining = max(0, $frequency - $weekCompletions);
-            $grayDots += $remaining;
+            // Current week - calculate what's achievable vs impossible
+            $daysRemaining = $currentDate->diff($weekEnd)->days; // days after today
+            $maxPossible = $weekCompletions + $daysRemaining;
+
+            $weekData['green'] = min($weekCompletions, $frequency);
+            $impossibleToRecover = max(0, $frequency - $maxPossible);
+            $stillAchievable = max(0, min($daysRemaining, $frequency - $weekCompletions));
+
+            $weekData['red'] = $impossibleToRecover;
+            $weekData['gray'] = $stillAchievable;
         }
+
+        $weeks[] = $weekData;
+        $totalGreen += $weekData['green'];
+        $totalRed += $weekData['red'];
+        $totalGray += $weekData['gray'];
 
         $weekStart->modify('+7 days');
     }
 
     return [
-        'green' => $greenDots,
-        'red' => $redDots,
-        'gray' => $grayDots,
+        'weeks' => $weeks,
+        'green' => $totalGreen,
+        'red' => $totalRed,
+        'gray' => $totalGray,
     ];
 }
 
@@ -268,6 +283,7 @@ $stats = calculateReportStats($data);
                     $currentDate = new DateTime('now');
                     $currentDate->setTime(0, 0, 0);
                     $dots = calculateWeeklyDots($data, $habitName, $frequency, $stats['startDate'], $stats['endDate'], $currentDate);
+                    $weeks = $dots['weeks'];
                     $greenDots = $dots['green'];
                     $redDots = $dots['red'];
                     $grayDots = $dots['gray'];
@@ -285,16 +301,23 @@ $stats = calculateReportStats($data);
                             <span class="text-xs text-slate-400 tabular-nums"><?= $completed ?>/<?= $expected ?></span>
                         </div>
                         <div class="flex items-center gap-3">
-                            <div class="flex-1 flex gap-0.5 flex-wrap">
-                                <?php for ($i = 0; $i < $greenDots; $i++): ?>
-                                    <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                <?php endfor; ?>
-                                <?php for ($i = 0; $i < $redDots; $i++): ?>
-                                    <div class="w-2 h-2 rounded-full bg-red-400"></div>
-                                <?php endfor; ?>
-                                <?php for ($i = 0; $i < $grayDots; $i++): ?>
-                                    <div class="w-2 h-2 rounded-full bg-slate-200"></div>
-                                <?php endfor; ?>
+                            <div class="flex-1 flex gap-1.5 flex-wrap items-center">
+                                <?php foreach ($weeks as $weekIndex => $week): ?>
+                                    <?php if ($weekIndex > 0): ?>
+                                        <div class="w-px h-3 bg-slate-200 mx-0.5"></div>
+                                    <?php endif; ?>
+                                    <div class="flex gap-0.5">
+                                        <?php for ($i = 0; $i < $week['green']; $i++): ?>
+                                            <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                        <?php endfor; ?>
+                                        <?php for ($i = 0; $i < $week['red']; $i++): ?>
+                                            <div class="w-2 h-2 rounded-full bg-red-400"></div>
+                                        <?php endfor; ?>
+                                        <?php for ($i = 0; $i < $week['gray']; $i++): ?>
+                                            <div class="w-2 h-2 rounded-full bg-slate-200"></div>
+                                        <?php endfor; ?>
+                                    </div>
+                                <?php endforeach; ?>
                             </div>
                             <span class="text-xs text-slate-500 tabular-nums w-8"><?= $percent ?>%</span>
                         </div>
