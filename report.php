@@ -304,7 +304,7 @@ $stats = calculateReportStats($data);
                             <div class="flex-1 flex gap-1.5 flex-wrap items-center">
                                 <?php foreach ($weeks as $weekIndex => $week): ?>
                                     <?php if ($weekIndex > 0): ?>
-                                        <div class="w-px h-3 bg-slate-200 mx-0.5"></div>
+                                        <div class="w-px h-3 bg-slate-200"></div>
                                     <?php endif; ?>
                                     <div class="flex gap-0.5">
                                         <?php for ($i = 0; $i < $week['green']; $i++): ?>
