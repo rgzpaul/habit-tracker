@@ -77,7 +77,7 @@ function calculateWeeklyDots(array $data, string $habitName, int $frequency, Dat
             $weekData['gray'] = $frequency;
         } else {
             // Current week - calculate what's achievable vs impossible
-            $daysRemaining = $currentDate->diff($weekEnd)->days; // days after today
+            $daysRemaining = $currentDate->diff($weekEnd)->days + 1; // days remaining including today
             $maxPossible = $weekCompletions + $daysRemaining;
 
             $weekData['green'] = min($weekCompletions, $frequency);
