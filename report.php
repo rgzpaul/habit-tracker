@@ -39,6 +39,56 @@ function calculateExpectedCompletions(int $trackingDays, int $frequencyPerWeek):
     return (int) round($weeks * $frequencyPerWeek);
 }
 
+function calculateWeeklyDots(array $data, string $habitName, int $frequency, DateTime $startDate, DateTime $endDate, DateTime $currentDate): array {
+    $greenDots = 0;
+    $redDots = 0;
+    $grayDots = 0;
+
+    // Iterate through each week
+    $weekStart = clone $startDate;
+    while ($weekStart <= $endDate) {
+        $weekEnd = clone $weekStart;
+        $weekEnd->modify('+6 days');
+        if ($weekEnd > $endDate) {
+            $weekEnd = clone $endDate;
+        }
+
+        // Count completions for this week
+        $weekCompletions = 0;
+        $checkDate = clone $weekStart;
+        while ($checkDate <= $weekEnd) {
+            $dateStr = $checkDate->format('Y-m-d');
+            if (isset($data['days'][$dateStr][$habitName]) && $data['days'][$dateStr][$habitName]) {
+                $weekCompletions++;
+            }
+            $checkDate->modify('+1 day');
+        }
+
+        // Determine if this week is elapsed, current, or future
+        if ($weekEnd < $currentDate) {
+            // Fully elapsed week - cap at frequency, rest is red
+            $greenDots += min($weekCompletions, $frequency);
+            $redDots += max(0, $frequency - $weekCompletions);
+        } elseif ($weekStart > $currentDate) {
+            // Future week - all gray
+            $grayDots += $frequency;
+        } else {
+            // Current week (partial) - green for done, gray for remaining potential
+            $greenDots += min($weekCompletions, $frequency);
+            $remaining = max(0, $frequency - $weekCompletions);
+            $grayDots += $remaining;
+        }
+
+        $weekStart->modify('+7 days');
+    }
+
+    return [
+        'green' => $greenDots,
+        'red' => $redDots,
+        'gray' => $grayDots,
+    ];
+}
+
 function calculateReportStats(array $data): array {
     $startDate = new DateTime($data['startDate']);
     $startDate->setTime(0, 0, 0);
@@ -213,13 +263,18 @@ $stats = calculateReportStats($data);
                     $frequency = getHabitFrequency($habit);
                     $completed = $stats['habitStats'][$habitName];
                     $expected = $stats['habitExpected'][$habitName];
-                    $elapsedExpected = $stats['habitElapsedExpected'][$habitName];
-                    $percent = calculateHabitProgress($completed, $expected);
 
-                    // Calculate dots: green (checked), red (missed), gray (future)
-                    $greenDots = $completed;
-                    $redDots = max(0, $elapsedExpected - $completed);
-                    $grayDots = max(0, $expected - $elapsedExpected);
+                    // Calculate dots per-week (no banking allowed)
+                    $currentDate = new DateTime('now');
+                    $currentDate->setTime(0, 0, 0);
+                    $dots = calculateWeeklyDots($data, $habitName, $frequency, $stats['startDate'], $stats['endDate'], $currentDate);
+                    $greenDots = $dots['green'];
+                    $redDots = $dots['red'];
+                    $grayDots = $dots['gray'];
+
+                    // Percentage based on green vs total expected (green + red + gray)
+                    $totalDots = $greenDots + $redDots + $grayDots;
+                    $percent = $totalDots > 0 ? round(($greenDots / $totalDots) * 100) : 0;
                 ?>
                     <div class="px-5 py-4">
                         <div class="flex items-center justify-between mb-2">
