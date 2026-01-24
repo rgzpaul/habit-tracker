@@ -301,12 +301,9 @@ $stats = calculateReportStats($data);
                             <span class="text-xs text-slate-400 tabular-nums"><?= $completed ?>/<?= $expected ?></span>
                         </div>
                         <div class="flex items-center gap-3">
-                            <div class="flex-1 flex gap-1.5 flex-wrap items-center">
-                                <?php foreach ($weeks as $weekIndex => $week): ?>
-                                    <?php if ($weekIndex > 0): ?>
-                                        <div class="w-px h-3 bg-slate-200"></div>
-                                    <?php endif; ?>
-                                    <div class="flex gap-0.5">
+                            <div class="flex-1 flex gap-1 flex-wrap items-center">
+                                <?php foreach ($weeks as $week): ?>
+                                    <div class="flex gap-0.5 border border-slate-200 rounded px-1 py-0.5">
                                         <?php for ($i = 0; $i < $week['green']; $i++): ?>
                                             <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
                                         <?php endfor; ?>
