@@ -105,7 +105,7 @@ function calculateReportStats(array $data): array {
         $totalElapsedPossible += $elapsedExpected;
     }
 
-    $progressPercent = $totalElapsedPossible > 0 ? round(($totalChecks / $totalElapsedPossible) * 100) : 0;
+    $progressPercent = $totalPossible > 0 ? round(($totalChecks / $totalPossible) * 100) : 0;
 
     return [
         'startDate'            => $startDate,
@@ -212,10 +212,14 @@ $stats = calculateReportStats($data);
                     $habitName = getHabitName($habit);
                     $frequency = getHabitFrequency($habit);
                     $completed = $stats['habitStats'][$habitName];
+                    $expected = $stats['habitExpected'][$habitName];
                     $elapsedExpected = $stats['habitElapsedExpected'][$habitName];
-                    $percent = calculateHabitProgress($completed, $elapsedExpected);
-                    $filledPercent = min(100, $percent);
-                    $missedPercent = max(0, 100 - $filledPercent);
+                    $percent = calculateHabitProgress($completed, $expected);
+
+                    // Calculate dots: green (checked), red (missed), gray (future)
+                    $greenDots = $completed;
+                    $redDots = max(0, $elapsedExpected - $completed);
+                    $grayDots = max(0, $expected - $elapsedExpected);
                 ?>
                     <div class="px-5 py-4">
                         <div class="flex items-center justify-between mb-2">
@@ -223,12 +227,19 @@ $stats = calculateReportStats($data);
                                 <span class="text-sm text-slate-700"><?= htmlspecialchars($habitName) ?></span>
                                 <span class="text-xs text-slate-400"><?= $frequency ?>x/wk</span>
                             </div>
-                            <span class="text-xs text-slate-400 tabular-nums"><?= $completed ?>/<?= $elapsedExpected ?></span>
+                            <span class="text-xs text-slate-400 tabular-nums"><?= $completed ?>/<?= $expected ?></span>
                         </div>
                         <div class="flex items-center gap-3">
-                            <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden flex">
-                                <div class="h-full bg-slate-700 transition-all duration-300" style="width: <?= $filledPercent ?>%"></div>
-                                <div class="h-full bg-slate-300 transition-all duration-300" style="width: <?= $missedPercent ?>%"></div>
+                            <div class="flex-1 flex gap-0.5 flex-wrap">
+                                <?php for ($i = 0; $i < $greenDots; $i++): ?>
+                                    <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                <?php endfor; ?>
+                                <?php for ($i = 0; $i < $redDots; $i++): ?>
+                                    <div class="w-2 h-2 rounded-full bg-red-400"></div>
+                                <?php endfor; ?>
+                                <?php for ($i = 0; $i < $grayDots; $i++): ?>
+                                    <div class="w-2 h-2 rounded-full bg-slate-200"></div>
+                                <?php endfor; ?>
                             </div>
                             <span class="text-xs text-slate-500 tabular-nums w-8"><?= $percent ?>%</span>
                         </div>
