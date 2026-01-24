@@ -408,7 +408,11 @@ $stats = calculateStats($data);
                     const start = new Date(startDate + 'T00:00:00');
                     const end = new Date(start);
                     end.setDate(end.getDate() + numberOfDays - 1);
-                    const endStr = end.toISOString().split('T')[0];
+                    // Use local date methods instead of toISOString() to avoid timezone shifts
+                    const year = end.getFullYear();
+                    const month = String(end.getMonth() + 1).padStart(2, '0');
+                    const day = String(end.getDate()).padStart(2, '0');
+                    const endStr = `${year}-${month}-${day}`;
                     $('#current-period').html(`${startDate} &rarr; ${endStr}`);
                 }
             }
