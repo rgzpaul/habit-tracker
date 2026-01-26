@@ -136,7 +136,7 @@ $columns = $data['columns'];
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#334155">
     <link rel="manifest" href="manifest.php">
-    <title><?= $info['trackingDays'] ?> Days</title>
+    <title>Habit Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
