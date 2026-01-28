@@ -303,7 +303,15 @@ $stats = calculateReportStats($data);
                         <div class="flex items-start gap-3">
                             <div class="flex-1 flex gap-1 flex-wrap items-center">
                                 <?php foreach ($weeks as $week): ?>
-                                    <div class="flex gap-0.5 border border-slate-200 rounded px-1 py-0.5">
+                                    <?php
+                                        $weekBg = '';
+                                        if ($week['red'] > 0) {
+                                            $weekBg = 'bg-red-100';
+                                        } elseif ($week['green'] > 0 && $week['gray'] === 0) {
+                                            $weekBg = 'bg-emerald-100';
+                                        }
+                                    ?>
+                                    <div class="flex gap-0.5 border border-slate-200 rounded px-1 py-0.5 <?= $weekBg ?>">
                                         <?php for ($i = 0; $i < $week['green']; $i++): ?>
                                             <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
                                         <?php endfor; ?>
